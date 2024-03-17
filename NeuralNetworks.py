@@ -667,7 +667,7 @@ class Gradient_descent :
         validation_accuracy = []
         
         for i in range(epochs):
-            eps = 1e-10
+            eps = self.config['epsilon']
             s = 0.0
             c = 0
             for j in range(0,len(x_train)//self.batch): 
