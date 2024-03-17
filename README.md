@@ -85,10 +85,12 @@ def your_optimizer_algorithm_name(self):
             you can play around with your logic and define all of them accordingly
         '''
         for i in range(epochs):
+            '''
+               if you have any logic which is applied per epoch apply here
+            '''
             s = 0.0
             c = 0
             for j in range(0,len(x_train)//self.batch):
-                
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
                 A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
@@ -102,7 +104,10 @@ def your_optimizer_algorithm_name(self):
                         s = s + np.sum((y[itr]-yp[itr])**2)
                     if np.argmax(y[itr]) == np.argmax(yp[itr]) :
                         c = c + 1
-
+                '''
+                  if you have any logic which is applied per batch apply here
+                  updation rules can also be applied here
+                '''
                 delW,delb = self.backward_propagation(A,H,W,b,y.T)
                 PMA = Arithmetic()    # P - Plus, M - Minus , A - Arithmetic
                 # if you want the ordinary updation rule like sgd,nag etc. :  W = PMA.Subtract(W,delW,self.eta)
@@ -125,8 +130,8 @@ def your_optimizer_algorithm_name(self):
          
         return W,b
 ```
-Now after adding your desired optimizer, add the following statement in the if-else-if block of the run_models function
+Now after adding your desired optimizer, add the following statement in the if-else-if block of the **Run_Models()** function, this function is also present in the same class i.e. **Gradient_descent**
 ```python
    elif self.config['optimizer'] == 'your_optimizer_algorithm_name' :
-            W,b = self.your_optimizer_algorithm_name()
+      W,b = self.your_optimizer_algorithm_name()
 ```
