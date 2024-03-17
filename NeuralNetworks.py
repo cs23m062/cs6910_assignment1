@@ -74,6 +74,11 @@ class Differential :
 
     def Rel_dif(self,a):
         return (a > 0).astype('float64')
+    
+    def Iden_dif(self,a):
+        g_dash = a
+        g_dash[:] = 1
+        return g_dash
 
 class Initializer :
 
@@ -238,8 +243,10 @@ class Gradient_descent :
                     diff_vect = d.sig_dif(A[k-1])
                 elif self.activation == 'tanh':
                     diff_vect = d.tan_dif(A[k-1])
-                else :
+                elif self.activation == 'ReLU':
                     diff_vect = d.Rel_dif(A[k-1])
+                else :
+                    diff_vect = d.Iden_dif(A[k-1])
                 delA[k-1] = np.multiply(delh[k-1],diff_vect)
 
         return delW,delb
@@ -263,7 +270,7 @@ class Gradient_descent :
                 h = activ.sigmoid(a)
             elif self.activation == 'tanh':   # tanh activation function
                 h = np.tanh(a)
-            else :            # ReLU activation function
+            elif self.activation == 'ReLU' :            # ReLU activation function
                 h = activ.g3(a)
 
             H.append(h)
