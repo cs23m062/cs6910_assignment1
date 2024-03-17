@@ -44,7 +44,7 @@ class Activations :
     sig_dif -> differential function for sigmoid neuron
     tan_dif -> differential function for tanh neuron
     Rel_dif -> differential function for relu neuron
-    Iden_dif -> differential function for identity neuron
+    Iden_dif ->
 '''
 
 class Differential :
