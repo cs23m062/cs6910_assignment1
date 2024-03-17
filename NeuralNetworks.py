@@ -43,8 +43,8 @@ class Activations :
     class Differential :  contains all the necessary functions required for the artificial neurons to find the derivative of a function
     sig_dif -> differential function for sigmoid neuron
     tan_dif -> differential function for tanh neuron
-    Rel_dif -> differential function for tanh neuronrelu activation function value_returned = max(a,0)
-    Iden_dif ->
+    Rel_dif -> differential function for relu neuron
+    Iden_dif -> differential function for identity neuron
 '''
 
 class Differential :
