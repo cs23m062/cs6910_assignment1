@@ -7,6 +7,8 @@ from sklearn.preprocessing import OneHotEncoder
 from keras.datasets import fashion_mnist,mnist
 import math
 
+wandb.login()
+
 # Load fashion_MNIST data using Keras
 (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
 x_train,x_val, y_train, y_val=train_test_split(x_train,y_train, test_size=0.2,shuffle=True,random_state=42)
@@ -220,7 +222,10 @@ class Gradient_descent :
         delb = [[]]*(L+1)
         delh = [[]]*(L+1)
         
-        delA[L] = -(y - H[L])
+        if(self.config['loss'] == 'cross_entropy'):
+            delA[L] = -(y - H[L])
+        else:
+            delA[L] = -(y - H[L])*(H[L])*(1 - H[L])
 
         for k in range(L,0,-1):
             delW[k] = np.matmul(delA[k],H[k-1].T) 
@@ -344,7 +349,7 @@ class Gradient_descent :
             vl = self.calc_val_loss(W,b)
             validation_loss.append(vl[0]/len(x_val))
             validation_accuracy.append(vl[1]*100/len(x_val))
-            #wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
+            wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
             print('******************************************************************************************')
             print('epoch : ',i+1)
             print('Training accuracy :',training_accuracy[-1],'Training Loss :',training_loss[-1]) 
@@ -410,7 +415,7 @@ class Gradient_descent :
             vl = self.calc_val_loss(W,b)
             validation_loss.append(vl[0]/len(x_val))
             validation_accuracy.append(vl[1]*100/len(x_val))
-            #wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
+            wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
             print('******************************************************************************************')
             print('epoch : ',i+1)
             print('Training accuracy :',training_accuracy[-1],'Training Loss :',training_loss[-1]) 
@@ -485,7 +490,7 @@ class Gradient_descent :
             vl = self.calc_val_loss(W,b)
             validation_loss.append(vl[0]/len(x_val))
             validation_accuracy.append(vl[1]*100/len(x_val))
-            #wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
+            wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
             print('******************************************************************************************')
             print('epoch : ',i+1)
             print('Training accuracy :',training_accuracy[-1],'Training Loss :',training_loss[-1]) 
@@ -505,7 +510,7 @@ class Gradient_descent :
 
         vW,vb = I.Initialize(self.layers-1,self.npl)
         beta = self.config['beta']
-        eps = 1e-4
+        eps = self.config['epsilon']
         
         training_loss = []
         validation_loss = []
@@ -548,7 +553,7 @@ class Gradient_descent :
             vl = self.calc_val_loss(W,b)
             validation_loss.append(vl[0]/len(x_val))
             validation_accuracy.append(vl[1]*100/len(x_val))
-            #wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
+            wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
             print('******************************************************************************************')
             print('epoch : ',i+1)
             print('Training accuracy :',training_accuracy[-1],'Training Loss :',training_loss[-1]) 
@@ -576,7 +581,7 @@ class Gradient_descent :
         beta1,beta2 = self.config['beta1'],self.config['beta2']
 
         for i in range(epochs):
-            eps = 1e-10
+            eps = self.config['epsilon']
             s = 0.0
             c = 0
             for j in range(0,len(x_train)//self.batch): 
@@ -627,7 +632,7 @@ class Gradient_descent :
             vl = self.calc_val_loss(W,b)
             validation_loss.append(vl[0]/len(x_val))
             validation_accuracy.append(vl[1]*100/len(x_val))
-            #wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
+            wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
             print('******************************************************************************************')
             print('epoch : ',i+1)
             print('Training accuracy :',training_accuracy[-1],'Training Loss :',training_loss[-1]) 
@@ -710,7 +715,7 @@ class Gradient_descent :
             vl = self.calc_val_loss(W,b)
             validation_loss.append(vl[0]/len(x_val))
             validation_accuracy.append(vl[1]*100/len(x_val))
-            #wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
+            wandb.log({"training_loss": training_loss[-1],"validation_loss": validation_loss[-1],"training_accuracy":training_accuracy[-1],"validation_accuracy":validation_accuracy[-1],'epoch':i+1})
             print('******************************************************************************************')
             print('epoch : ',i+1)
             print('Training accuracy :',training_accuracy[-1],'Training Loss :',training_loss[-1]) 
@@ -721,7 +726,7 @@ class Gradient_descent :
     
     def Run_Models(self):
         run_name = "op_{}_ep_{}_lay_{}_npl_{}_eta_{}_bs_{}_ini_{}_reg_{}_loss_{}_activ_{}".format(self.config['optimizer'],self.config['epochs'],self.config['layers'],self.config['neurons_per_layer'],self.config['learning_rate'],self.config['batch_size'],self.config['Initialization'],self.config['regularization'],self.config['loss'],self.config['activation'])
-        #wandb.run.name = run_name
+        wandb.run.name = run_name
         
         W,b = [],[]
         if self.config['optimizer'] == 'sgd' :
