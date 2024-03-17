@@ -37,14 +37,14 @@ How to pass arguments:
 |-o, --optimizer	|nadam|choices: ["sgd", "momentum", "nag", "rmsprop", "adam", "nadam"]|
 |-lr, --learning_rate|0.01|Learning rate used to optimize model parameters|
 |-m, --momentum	|0.9|Momentum used by momentum and nag optimizers.|
-|-beta, --beta	|0.5|Beta used by rmsprop optimizer|
+|-beta, --beta	|0.9|Beta used by rmsprop optimizer|
 |-beta1, --beta1|0.9|Beta1 used by adam and nadam optimizers.|
 |-beta2, --beta2|0.99|Beta2 used by adam and nadam optimizers.|
 |-eps, --epsilon|1e-10|Epsilon used by optimizers.|
 |-w_d, --weight_decay|0.0005|	Weight decay/Regularization coefficient used by optimizers.|
 |-w_i, --weight_init|Xavier|	choices: ["random", "Xavier"]|
 |-nhl, --num_layers|5|Number of hidden layers used in feedforward neural network.|
-|-sz, --hidden_size	|256|	Number of hidden neurons in a feedforward layer.|
+|-sz, --hidden_size	|32|	Number of hidden neurons in a feedforward layer.|
 |-a, --activation|tanh|	choices: ["identity", "sigmoid", "tanh", "ReLU"]|
 |-cm, --conf_mat|default=0|Signifies whether you want to see the confusion matrix for the run|
 
@@ -58,7 +58,7 @@ So, sit back and relax and observe :)
 Open the **NeuralNetworks.py** file and open the **Gradient_descent class**:
 just below the backpropagation algorithm copy this template
 ```python
-def new_optimization_algorithm(self):
+def your_optimizer_algorithm_name(self):
    epochs = self.config['epochs']
         W = []    # list consisting of all the W's
         b = []    # list consiting of all the b's
@@ -124,4 +124,9 @@ def new_optimization_algorithm(self):
             print('******************************************************************************************')
          
         return W,b
+```
+Now after adding your desired optimizer, add the following statement in the if-else-if block of the run_models function
+```python
+   elif self.config['optimizer'] == 'your_optimizer_algorithm_name' :
+            W,b = self.your_optimizer_algorithm_name()
 ```
