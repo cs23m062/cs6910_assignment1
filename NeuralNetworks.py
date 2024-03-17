@@ -1,3 +1,7 @@
+'''
+    Importing all the necessary libraries
+'''
+
 import matplotlib.pyplot as plt
 import numpy as np
 import wandb
@@ -14,37 +18,10 @@ wandb.login()
 x_train,x_val, y_train, y_val=train_test_split(x_train,y_train, test_size=0.2,shuffle=True,random_state=42)
 
 '''
-/* -----------> Code for Question 1 <-------------- */
-
-class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat','Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
-wandb.init(project="Shubhodeep_Final_CS6190_DeepLearing_Assignment1",name = "Question 1")
-
-# Create a figure to display the sample images
-plt.figure(figsize=(10, 10))
-
-# Plot one sample image for each class
-for class_index in range(len(class_names)):
-    # Find the index of the first image with the current class label
-    sample_index = np.where(y_train == class_index)[0][0]
-    
-    # Get the image and its corresponding label
-    image = x_train[sample_index]
-    label = class_names[y_train[sample_index]]
-    
-    # Plot the image
-    plt.subplot(2, 5, class_index + 1)
-    plt.imshow(image, cmap=plt.cm.binary)
-    plt.title(label)
-    plt.axis('off')
-
-# Log the figure to Wandb
-wandb.log({"Question 1": wandb.Image(plt)})
-plt.show()
-
-#wandb.log({"Question 1": output_images})
-wandb.finish()
-
-/* ------------> Code Ends <----------------*/
+    class Activation :  contains all the necessary functions required for the artificial neurons
+    sigmoid -> sigmoid activation function
+    g3 -> relu activation function value_returned = max(a,0)
+    softmax -> function for the final y_hat, this returns a probability distribution over all classes
 '''
 
 class Activations :
@@ -62,20 +39,36 @@ class Activations :
         y = exp_a / sum_exp_a
         return y
 
+'''
+    class Differential :  contains all the necessary functions required for the artificial neurons to find the derivative of a function
+    sig_dif -> differential function for sigmoid neuron
+    tan_dif -> differential function for tanh neuron
+    Rel_dif -> differential function for tanh neuronrelu activation function value_returned = max(a,0)
+    Iden_dif ->
+'''
+
 class Differential :
     def sig_dif(self,a):
+        # if f(x) = 1/1+e^(-x)
+        # the f_dash(x) = f(x)*(1-f(x)), this is what is implemented here
         activ = Activations()
         g_x = activ.sigmoid(a)
         return g_x*(1-g_x)
 
     def tan_dif(self,a):
+        # if f(x) = e^x - e^-x/e^x + e^-x
+        # the f_dash(x) = (1 - f(x)^2), this is what is implemented here
         g_dash = np.tanh(a)
-        return 1 - (g_dash**2)
+        return 1 - (g_dash**2)  
 
     def Rel_dif(self,a):
-        return (a > 0).astype('float64')
+        #       if value inside entries of a>0 then set to true else set to false, 
+        #       .astype('float64') converts true/false into 1/0
+        return (a > 0).astype('float64')        
     
     def Iden_dif(self,a):
+        # if f(x) = x
+        # the f_dash(x) = 1, this is what is implemented here
         g_dash = a
         g_dash[:] = 1
         return g_dash
@@ -166,13 +159,13 @@ class Arithmetic :
             v[i] = v[i] - (eta * dv[i])
         return v
 
-    def RMSpropSubtract(self,v,dv,lv,eps,eta):     #Update rule : W(t+1) = W(t) + eta*delW
+    def RMSpropSubtract(self,v,dv,lv,eps,eta):     #Update rule : W(t+1) = W(t) + (eta/(sqrt(v) + Epsilon)*delW
         for i in range(1,len(v)):
             ueta = eta/(np.sqrt(np.sum(lv[i])) + eps)
             v[i] = v[i] - (ueta * dv[i])
         return v
 
-    def AdamSubtract(self,V,mV_hat,vV_hat,eps,eta):     #Update rule : W(t+1) = W(t) + eta*delW
+    def AdamSubtract(self,V,mV_hat,vV_hat,eps,eta):     #Update rule : W(t+1) = W(t) + (eta/(sqrt(v) + Epsilon)*delW
         for i in range(1,len(V)):
             norm = np.linalg.norm(vV_hat[i])
             ueta = eta/(np.sqrt(norm) + eps)
@@ -181,6 +174,8 @@ class Arithmetic :
 
 
 class Gradient_descent :
+    #constructor to create a neural network as specified by the user
+
     def __init__(self, input_size, output_size, config,flag = 0):
         global x_test,x_train,x_val,y_test,y_train,y_val
         self.input_size = input_size
@@ -220,19 +215,24 @@ class Gradient_descent :
             x_test = x_test.reshape((-1, 28 * 28))
 
     def backward_propagation(self,A,H,W,b,y):
+        # Get the number of layers
         L = self.layers
 
+        # Initialize lists to store gradients
         delA = [[]]*(L+1)
         delW = [[]]*(L+1)
         delb = [[]]*(L+1)
         delh = [[]]*(L+1)
         
+        # Calculate the derivative of the loss function
         if(self.config['loss'] == 'cross_entropy'):
             delA[L] = -(y - H[L])
         else:
             delA[L] = -(y - H[L])*(H[L])*(1 - H[L])
 
+        # Backpropagation loop
         for k in range(L,0,-1):
+            # Compute gradients for weights, biases, and hidden layer
             delW[k] = np.matmul(delA[k],H[k-1].T) 
             delb[k] = np.sum(delA[k],axis = 1)
             delh[k-1] = W[k].T @ delA[k]
@@ -247,24 +247,28 @@ class Gradient_descent :
                     diff_vect = d.Rel_dif(A[k-1])
                 else :
                     diff_vect = d.Iden_dif(A[k-1])
+                # Compute gradient for the previous layer
                 delA[k-1] = np.multiply(delh[k-1],diff_vect)
 
         return delW,delb
 
     def forward_propagation(self,W,b,layers,inpl):
-        A = [[]]
-        H = [inpl]
+        A = [[]]        # Pre Activations List
+        H = [inpl]      # Activations List
         
         activ = Activations()
         
-        for i in range (1,layers) :
+        #forward_propagation loop
+        for i in range (1,layers):
+            #reshaping the numpy array to make it addition compatible
             rep = (H[i-1].shape[1],1)
             bias = np.tile(b[i],rep).transpose()
             
+            # a = b + Wh
             a = np.add(bias,np.dot(W[i],H[i-1]))
 
             A.append(a)
-            h = a
+            h = a   # this is the case handling the identity function
 
             if self.activation == 'sigmoid':   # Sigmoid activation function
                 h = activ.sigmoid(a)
@@ -275,10 +279,12 @@ class Gradient_descent :
 
             H.append(h)
         
+        #reshaping the numpy array to make it addition compatible
         bias_new = b[layers]
         bias_new = np.tile(bias_new[:, np.newaxis], (1, self.batch))
         a = np.add(bias_new,np.inner(W[layers],H[layers-1].T))
-      
+
+        #compute probabilities using softmax
         A.append(a)
         a_trans = a.T
         y_hat = []
@@ -289,18 +295,22 @@ class Gradient_descent :
         H.append(y_hat)
         return A,H
     
+    '''
+        Function to calculate total validation loss and accuracy
+    '''
     def calc_val_loss(self,W,b):
         s = 0.0
         c = 0
         for j in range(0,len(x_val)//self.batch):
-                
+            # making the input go in batches of size self.batch    
             h0 = x_val[j*self.batch : (j+1)*self.batch]
-                
+            #calling the forward_propagation function    
             A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
             y = y_val[j*self.batch : (j+1)*self.batch]
                 
             yp = H[self.layers].T
+            #calculating the loss and correct predictions by the model in a batch
             for itr in range(self.batch):
                 if self.config['loss'] == 'cross_entropy' :
                     s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -316,27 +326,30 @@ class Gradient_descent :
         b = []    # list consiting of all the b's
         
         I = Initializer()
+        # Initialize W and b as per user's specification
         if(self.init == "random"):
             W,b = I.Initialize2(self.layers-1,self.npl)
         else:
             W,b = I.XavierIntializer(self.layers-1,self.npl)
         
-        training_loss = []
-        validation_loss = []
-        training_accuracy = []
-        validation_accuracy = []
+        training_loss = []          # list consisting of all the training losses
+        validation_loss = []        # list consisting of all the validation losses
+        training_accuracy = []      # list consisting of all the training accuracies
+        validation_accuracy = []    # list consisting of all the validation accuracies
         for i in range(epochs):
             s = 0.0
             c = 0
             for j in range(0,len(x_train)//self.batch):
-                
+                # making the input go in batches of size self.batch
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
                 
+                #calling the forward_propagation function
                 A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
                 y = y_train[j*self.batch : (j+1)*self.batch]
                 
                 yp = H[self.layers].T
+                #calculating the loss and correct predictions by the model in a batch
                 for itr in range(self.batch):
                     if self.config['loss'] == 'cross_entropy' :
                         s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -347,10 +360,12 @@ class Gradient_descent :
 
                 delW,delb = self.backward_propagation(A,H,W,b,y.T)
                 PMA = Arithmetic()    # P - Plus, M - Minus , A - Arithmetic
+                #Update rules
                 W = PMA.Subtract(W,delW,self.eta)
                 W = PMA.Subtract(W,W,self.eta*self.config['regularization'])
                 b = PMA.Subtract(b,delb,self.eta)
             
+            #calculating the total loss and total accuracies by the model at the end of the epoch
             training_loss.append(s/len(x_train))
             training_accuracy.append(c*100/len(x_train))
             vl = self.calc_val_loss(W,b)
@@ -372,6 +387,7 @@ class Gradient_descent :
         b = []    # list consiting of all the b's
 
         I = Initializer()
+        # Initialize W and b as per user's specification
         if(self.init == "random"):
             W,b = I.Initialize2(self.layers-1,self.npl)
         else:
@@ -380,23 +396,24 @@ class Gradient_descent :
         prev_uW,prev_ub = I.Initialize(self.layers-1,self.npl)
         beta = self.config['beta']
         
-        training_loss = []
-        validation_loss = []
-        training_accuracy = []
-        validation_accuracy = []
+        training_loss = []                      # list consisting of all the training losses
+        validation_loss = []                    # list consisting of all the validation losses
+        training_accuracy = []                  # list consisting of all the training accuracies
+        validation_accuracy = []                # list consisting of all the validation accuracies
 
         for i in range(epochs):
             s = 0.0
             c = 0
             for j in range(0,len(x_train)//self.batch):
-                
+                # making the input go in batches of size self.batch
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
-                
+                #calling the forward_propagation function
                 A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
                 y = y_train[j*self.batch : (j+1)*self.batch]
                 
                 yp = H[self.layers].T
+                #calculating the loss and correct predictions by the model in a batch
                 for itr in range(self.batch):
                     if self.config['loss'] == 'cross_entropy' :
                         s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -407,16 +424,23 @@ class Gradient_descent :
             
                 delW,delb = self.backward_propagation(A,H,W,b,y.T)
                 PMA = Arithmetic()
-                
+                # Update rules for momentum
+                '''
+                    uW(t+1) = beta*uW(t) + del(W)
+                    ub(t+1) = beta*ub(t) + del(b)
+                    W(t+1) = W(t) - eta*uW(t+1)
+                    b(t+1) = b(t) - eta*ub(t+1)
+                '''
+
                 for k in range(1,len(prev_uW)):
                     prev_uW[k] = np.add(beta*prev_uW[k],delW[k])
                     prev_ub[k] = np.add(beta*prev_ub[k],delb[k])
-
+                
                 W = PMA.Subtract(W,prev_uW,self.eta)
                 W = PMA.Subtract(W,W,self.eta*self.config['regularization'])
                 b = PMA.Subtract(b,prev_ub,self.eta)
                 
-                    
+            #calculating the total loss and total accuracies by the model at the end of the epoch        
             training_loss.append(s/len(x_train))
             training_accuracy.append(c*100/len(x_train))
             vl = self.calc_val_loss(W,b)
@@ -437,6 +461,7 @@ class Gradient_descent :
         b = []    # list consiting of all the b's
 
         I = Initializer()
+        # Initialize W and b as per user's specification
         if(self.init == "random"):
             W,b = I.Initialize2(self.layers-1,self.npl)
             print(len(W),len(b))
@@ -446,13 +471,14 @@ class Gradient_descent :
         prev_vW,prev_vb = I.Initialize(self.layers-1,self.npl)
         beta = self.config['beta']
         
-        training_loss = []
-        validation_loss = []
-        training_accuracy = []
-        validation_accuracy = []
+        training_loss = []                      # list consisting of all the training losses
+        validation_loss = []                    # list consisting of all the validation losses
+        training_accuracy = []                  # list consisting of all the training accuracies
+        validation_accuracy = []                # list consisting of all the validation accuracies
         
         for i in range(epochs):
             vW,vb = I.Initialize(self.layers-1,self.npl)
+            #computing the temporary W on which derivative will be calculated
             for k in range(1,len(prev_vW)):
                 vW[k] = beta*prev_vW[k]
                 vb[k] = beta*prev_vb[k]
@@ -464,14 +490,15 @@ class Gradient_descent :
             tempb = ASA.Subtract(b,vb,beta)
             
             for j in range(0,len(x_train)//self.batch):
-                
+                # making the input go in batches of size self.batch
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
-                
+                #calling the forward_propagation function
                 A,H = self.forward_propagation(tempW,tempb,self.layers,h0.T)
                 
                 y = y_train[j*self.batch : (j+1)*self.batch]
                 
                 yp = H[self.layers].T
+                #calculating the loss and correct predictions by the model in a batch
                 for itr in range(self.batch):
                     if self.config['loss'] == 'cross_entropy' :
                         s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -481,7 +508,13 @@ class Gradient_descent :
                         c = c + 1
             
                 delW,delb = self.backward_propagation(A,H,tempW,tempb,y.T)
-
+                # Update rules for nesterov accelerated gradient descent
+                '''
+                    uW(t+1) = beta*uW(t) + eta*del(W-beta*uW(t))
+                    ub(t+1) = beta*ub(t) + eta*del(b-beta*ub(t))
+                    W(t+1) = W(t) - uW(t+1)
+                    b(t+1) = b(t) - ub(t+1)
+                '''
                 for k in range(1,len(prev_vW)):
                     prev_vW[k] = beta*prev_vW[k] + self.eta*delW[k]
                     prev_vb[k] = beta*prev_vb[k] + self.eta*delb[k]
@@ -491,7 +524,8 @@ class Gradient_descent :
                 b = ASA.Subtract(b,vb,1)
                 prev_vb = vb
                 prev_vW = vW
-                
+
+            #calculating the total loss and total accuracies by the model at the end of the epoch    
             training_loss.append(s/len(x_train))
             training_accuracy.append(c*100/len(x_train))
             vl = self.calc_val_loss(W,b)
@@ -507,9 +541,12 @@ class Gradient_descent :
         return W,b
 
     def RMSprop(self) :
-        epochs = self.config["epochs"]
+        epochs =  self.config['epochs']
+        W = []    # list consisting of all the W's
+        b = []    # list consiting of all the b's
 
         I = Initializer()
+        # Initialize W and b as per user's specification
         if(self.init == "random"):
             W,b = I.Initialize2(self.layers-1,self.npl)
         else:
@@ -519,22 +556,24 @@ class Gradient_descent :
         beta = self.config['beta']
         eps = self.config['epsilon']
         
-        training_loss = []
-        validation_loss = []
-        training_accuracy = []
-        validation_accuracy = []
+        training_loss = []                      # list consisting of all the training losses
+        validation_loss = []                    # list consisting of all the validation losses
+        training_accuracy = []                  # list consisting of all the training accuracies
+        validation_accuracy = []                # list consisting of all the validation accuracies
         
         for i in range(epochs):
             s = 0.0
             c = 0
             for j in range(0,len(x_train)//self.batch):
+                # making the input go in batches of size self.batch
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
-                
+                #calling the forward_propagation function
                 A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
                 y = y_train[j*self.batch : (j+1)*self.batch]
                 
                 yp = H[self.layers].T
+                #calculating the loss and correct predictions by the model in a batch
                 for itr in range(self.batch):
                     if self.config['loss'] == 'cross_entropy' :
                         s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -542,10 +581,10 @@ class Gradient_descent :
                         s = s + np.sum((y[itr]-yp[itr])**2)
                     if np.argmax(y[itr]) == np.argmax(yp[itr]) :
                         c = c + 1
-            
+                
                 delW,delb = self.backward_propagation(A,H,W,b,y.T)
                 PMA = Arithmetic()
-               
+                # Update rules for rms prop
                 for k in range(1,len(vW)):
                     vW[k] = (beta * vW[k])+ ((1-beta)*(delW[k]**2))
                     vb[k] = (beta * vb[k])+ ((1-beta)*(delb[k]**2))
@@ -555,6 +594,7 @@ class Gradient_descent :
                 b = PMA.RMSpropSubtract(b,delb,vb,eps,self.eta)
                 delW,delb = I.Initialize(self.layers-1,self.npl)
             
+            #calculating the total loss and total accuracies by the model at the end of the epoch
             training_loss.append(s/len(x_train))
             training_accuracy.append(c*100/len(x_train))
             vl = self.calc_val_loss(W,b)
@@ -570,18 +610,21 @@ class Gradient_descent :
         return W,b
 
     def Adam(self) :
-        epochs = self.config["epochs"]
+        epochs =  self.config['epochs']
+        W = []    # list consisting of all the W's
+        b = []    # list consiting of all the b's
 
         I = Initializer()
+        # Initialize W and b as per user's specification
         if(self.init == "random"):
             W,b = I.Initialize2(self.layers-1,self.npl)
         else:
             W,b = W,b = I.XavierIntializer(self.layers-1,self.npl)
 
-        training_loss = []
-        validation_loss = []
-        training_accuracy = []
-        validation_accuracy = []
+        training_loss = []                      # list consisting of all the training losses
+        validation_loss = []                    # list consisting of all the validation losses
+        training_accuracy = []                  # list consisting of all the training accuracies
+        validation_accuracy = []                # list consisting of all the validation accuracies
         
         vW,vb = I.Initialize(self.layers-1,self.npl)
         mW,mb = I.Initialize(self.layers-1,self.npl)
@@ -591,14 +634,16 @@ class Gradient_descent :
             eps = self.config['epsilon']
             s = 0.0
             c = 0
-            for j in range(0,len(x_train)//self.batch): 
+            for j in range(0,len(x_train)//self.batch):
+                # making the input go in batches of size self.batch 
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
-                
+                #calling the forward_propagation function
                 A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
                 y = y_train[j*self.batch : (j+1)*self.batch]
                 
                 yp = H[self.layers].T
+                #calculating the loss and correct predictions by the model in a batch
                 for itr in range(self.batch):
                     if self.config['loss'] == 'cross_entropy' :
                         s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -609,7 +654,7 @@ class Gradient_descent :
             
                 delW,delb = self.backward_propagation(A,H,W,b,y.T)
                 PMA = Arithmetic()
-
+                # Update rules for Adam
                 vW_hat,vb_hat = I.Initialize(self.layers-1,self.npl)
                 mW_hat,mb_hat = I.Initialize(self.layers-1,self.npl)
 
@@ -634,6 +679,7 @@ class Gradient_descent :
                 W = PMA.Subtract(W,W,self.eta*self.config['regularization'])
                 b = PMA.AdamSubtract(b,mb_hat,vb_hat,eps,self.eta)
             
+            #calculating the total loss and total accuracies by the model at the end of the epoch
             training_loss.append(s/len(x_train))
             training_accuracy.append(c*100/len(x_train))
             vl = self.calc_val_loss(W,b)
@@ -649,7 +695,10 @@ class Gradient_descent :
         return W,b
 
     def NAdam(self) :
-        epochs = self.config["epochs"]
+        epochs =  self.config['epochs']
+        W = []    # list consisting of all the W's
+        b = []    # list consiting of all the b's
+
 
         I = Initializer()
         if(self.init == "random"):
@@ -670,14 +719,16 @@ class Gradient_descent :
             eps = self.config['epsilon']
             s = 0.0
             c = 0
-            for j in range(0,len(x_train)//self.batch): 
+            for j in range(0,len(x_train)//self.batch):
+                # making the input go in batches of size self.batch 
                 h0 = x_train[j*self.batch : (j+1)*self.batch]
-                
+                #calling the forward_propagation function
                 A,H = self.forward_propagation(W,b,self.layers,h0.T)
                 
                 y = y_train[j*self.batch : (j+1)*self.batch]
                 
                 yp = H[self.layers].T
+                #calculating the loss and correct predictions by the model in a batch
                 for itr in range(self.batch):
                     if self.config['loss'] == 'cross_entropy' :
                         s = s - math.log(y[itr] @ yp[itr] + 1e-20)
@@ -688,7 +739,7 @@ class Gradient_descent :
             
                 delW,delb = self.backward_propagation(A,H,W,b,y.T)
                 PMA = Arithmetic()
-
+                # Update rules for NAdam
                 vW_hat,vb_hat = I.Initialize(self.layers-1,self.npl)
                 mW_hat,mb_hat = I.Initialize(self.layers-1,self.npl)
                 uW_hat,ub_hat = I.Initialize(self.layers-1,self.npl)
@@ -717,6 +768,7 @@ class Gradient_descent :
                 W = PMA.Subtract(W,W,self.eta*self.config['regularization'])
                 b = PMA.AdamSubtract(b,ub_hat,vb_hat,eps,self.eta)
     
+            #calculating the total loss and total accuracies by the model at the end of the epoch
             training_loss.append(s/len(x_train))
             training_accuracy.append(c*100/len(x_train))
             vl = self.calc_val_loss(W,b)
@@ -732,10 +784,15 @@ class Gradient_descent :
         return W,b
     
     def Run_Models(self):
+        # Generate a unique run name based on the configuration parameters
         run_name = "op_{}_ep_{}_lay_{}_npl_{}_eta_{}_bs_{}_ini_{}_reg_{}_loss_{}_activ_{}".format(self.config['optimizer'],self.config['epochs'],self.config['layers'],self.config['neurons_per_layer'],self.config['learning_rate'],self.config['batch_size'],self.config['Initialization'],self.config['regularization'],self.config['loss'],self.config['activation'])
+        # Set the run name for Weights & Biases tracking
         wandb.run.name = run_name
         
-        W,b = [],[]
+        # Initialize lists to store weights and biases
+        W,b = [],[]     #dummies anyways, these will be updated
+
+        # Choose the optimizer based on the configuration
         if self.config['optimizer'] == 'sgd' :
             W,b = self.Stocastic_Gradient_descent()
         elif self.config['optimizer'] == 'momentum' :
@@ -752,7 +809,11 @@ class Gradient_descent :
 
 
 class Prediction:
-
+    '''
+        This class contains the prediction class which produces the confusion matrix
+        This is called only if user specifies it
+        by default this won't be called
+    '''
     def predict_test(self,W,b,config):
         predicted_labels = []
         actual_labels = []

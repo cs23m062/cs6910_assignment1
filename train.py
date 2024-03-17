@@ -26,7 +26,7 @@ def main(args):
     else:
         config['beta'] = args.momentum
 
-    wandb.init(project=args.wandb_project)
+    wandb.init(project=args.wandb_project,config=config)
     #config = wandb.config
     
     model = NN.Gradient_descent(784,10,config)
@@ -63,12 +63,12 @@ if __name__ == '__main__':
     parser.add_argument("-wp","--wandb_project", type=str, default ='Shubhodeep_Final_CS6190_DeepLearing_Assignment1', help="Project name used to track experiments in Weights & Biases dashboard")
     parser.add_argument("-we","--wandb_entity", type=str, default ='shubhodeepiitm062',help="Wandb Entity used to track experiments in the Weights & Biases dashboard.")
     parser.add_argument("-d","--dataset",type=str,default ='fashion_mnist',help="dataset choices: [mnist, fashion_mnist]")
-    parser.add_argument("-e","--epochs",type=int,default = 3,help ='Number of epochs to train neural network.')
+    parser.add_argument("-e","--epochs",type=int,default = 5,help ='Number of epochs to train neural network.')
     parser.add_argument("-b","--batch_size",type=int,default = 64,help='Batch size used to train neural network.')
     parser.add_argument("-l","--loss",type=str,default='cross_entropy',help= 'choices: ["mean_squared_error", "cross_entropy"]')
     parser.add_argument('-o','--optimizer',type=str,default='nadam',help='choices: ["sgd", "momentum", "nag", "rmsprop", "adam", "nadam"]')
     parser.add_argument('-lr','--learning_rate',type=float,default=0.01,help='Learning rate used to optimize model parameters')
-    parser.add_argument('-m','--momentum',type=float,default=0.5,help='Momentum used by momentum and nag optimizers.')
+    parser.add_argument('-m','--momentum',type=float,default=0.9,help='Momentum used by momentum and nag optimizers.')
     parser.add_argument('-beta','--beta',type = float,default=0.9,help='Beta used by rmsprop optimizer')
     parser.add_argument('-beta1','--beta1',type=float,default=0.9,help='Beta1 used by adam and nadam optimizers.')
     parser.add_argument('-beta2','--beta2',type=float,default=0.999,help='Beta2 used by adam and nadam optimizers.')
